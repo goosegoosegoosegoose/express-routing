@@ -1,77 +1,66 @@
 const express = require('express');
 const app = express();
+const ExpressError = require("./expressError")
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-app.get('/mean', (req, res) => {
-    if (!req.query.nums) {
-        return res
-                .status(400)
-                .json("Error: Numbers are required.")
+app.get('/mean', (req, res, next) => {
+    try {
+        if (!req.query.nums) throw new ExpressError("Numbers are required.", 400);
+
+        const nums = req.query.nums.split(",").map(Number);
+
+        if (nums.includes(NaN)) throw new ExpressError("Includes non-number.", 400);
+
+        console.log(nums);
+        let mean = getMean(nums);
+        return res.json({
+            operation: "mean",
+            value: `${mean}`
+        });
+    } catch (err) {
+        return next(err);
     };
-
-    const nums = req.query.nums.split(",").map(Number);
-
-    if (nums.includes(NaN)){
-        return res
-                .status(400)
-                .json("Error: includes non-number")
-    };
-
-    console.log(nums);
-    let mean = getMean(nums);
-    return res.json({
-        operation: "mean",
-        value: `${mean}`
-    });
 });
 
 
-app.get('/median', (req, res) => {
-    if (!req.query.nums) {
-        return res
-                .status(400)
-                .json("Error: Numbers are required.")
+app.get('/median', (req, res, next) => {
+    try {
+        if (!req.query.nums) throw new ExpressError("Numbers are required.", 400);
+
+        const nums = req.query.nums.split(",").map(Number);
+
+        if (nums.includes(NaN)) throw new ExpressError("Includes non-number.", 400);
+
+        let median = getMedian(nums);
+        return res.json({
+            operation: "median",
+            value: `${median}`
+        });
+    } catch (err){
+        return next(err);
     };
-
-    const nums = req.query.nums.split(",").map(Number);
-
-    if (nums.includes(NaN)){
-        return res
-                .status(400)
-                .json("Error: includes non-number")
-    };
-
-    let median = getMedian(nums);
-    return res.json({
-        operation: "median",
-        value: `${median}`
-    });
 });
 
 
-app.get('/mode', (req, res) => {
-    if (!req.query.nums) {
-        return res
-                .status(400)
-                .json("Error: Numbers are required.")
+app.get('/mode', (req, res, next) => {
+    try {
+        if (!req.query.nums) throw new ExpressError("Numbers are required.", 400);
+
+        const nums = req.query.nums.split(",").map(Number);
+
+        if (nums.includes(NaN)) throw new ExpressError("Includes non-number.", 400);
+
+        let mode = getMode(nums);
+        return res.json({
+            operation: "mode",
+            value: `${mode}`
+        });
+    } catch (err) {
+        return next(err);
     };
-
-    const nums = req.query.nums.split(",").map(Number);
-
-    if (nums.includes(NaN)){
-        return res
-                .status(400)
-                .json("Error: includes non-number")
-    };
-
-    let mode = getMode(nums);
-    return res.json({
-        operation: "mode",
-        value: `${mode}`
-    });
 });
 
 
@@ -120,9 +109,17 @@ function getMode(nums){
     return Number(mode);
 };
 
+app.use((err, req, res, next) => {
+    let status = err.status || 500;
+    let message = err.message;
+
+    return res.status(status).json({
+        error: {message, status}
+    });
+});
+
+app.listen(3000, function () {
+    console.log('App on port 3000');
+});
+
 module.exports = { getMean, getMedian, getMode }
-
-// app.listen(3000, function () {
-//     console.log('App on port 3000');
-// });
-
